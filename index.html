@@ -1,0 +1,465 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Forex &amp; Gold Monitor</title>
+<style>
+:root{--bg:#f2efe8;--panel:#fffdf8;--line:#dcd5c4;--tx:#1b2230;--dim:#667084;--gold:#a8680f;--cyan:#0b7488;--red:#c03a2b;--grn:#1d8449;
+box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#060a11;--panel:#0c131e;--line:#1c293a;--tx:#dce7f4;--dim:#7e91a9;--gold:#f6b93b;--cyan:#38e1ff;--red:#ff5c6c;--grn:#3fe08f}}
+:root[data-theme="dark"]{--bg:#060a11;--panel:#0c131e;--line:#1c293a;--tx:#dce7f4;--dim:#7e91a9;--gold:#f6b93b;--cyan:#38e1ff;--red:#ff5c6c;--grn:#3fe08f}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--tx);font:12px/1.5 ui-monospace,SFMono-Regular,Menlo,Consolas,monospace}
+.w{max-width:720px;margin:0 auto;padding:12px}
+h1{font-size:15px;margin:0;font-weight:700}h1 span{color:var(--gold)}
+.hd{display:flex;justify-content:space-between;align-items:baseline;gap:8px;margin-bottom:10px;flex-wrap:wrap}
+.dim{color:var(--dim)}
+.p{background:var(--panel);border:1px solid var(--line);border-radius:6px;padding:10px;margin-bottom:10px;box-shadow:inset 2px 0 0 var(--cyan)}
+.l{color:var(--dim);font-size:11px;margin-bottom:6px;text-transform:uppercase;letter-spacing:.08em;font-family:ui-monospace,Menlo,Consolas,monospace}
+.tabs{display:flex;gap:6px;margin-bottom:10px;overflow-x:auto}
+.tabs button{flex:1;min-width:76px}
+button{background:transparent;color:var(--tx);border:1px solid var(--line);border-radius:4px;padding:8px;font:inherit;cursor:pointer}
+button.on{border-color:var(--gold);color:var(--gold)}
+button:focus-visible,input:focus-visible,textarea:focus-visible{outline:2px solid var(--cyan)}
+button:disabled{opacity:.4;cursor:default}
+.hero{position:relative;padding:0;overflow:hidden}
+#g{width:100%;height:250px;display:block;touch-action:pan-y}
+.tag{position:absolute;font-size:10px;color:var(--dim)}
+.sig{position:absolute;left:10px;bottom:8px;font-size:22px;font-weight:700;text-shadow:0 0 14px currentColor}
+.ins{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.ins label{display:block;color:var(--dim);font-size:10px}
+.ins input,textarea{width:100%;background:transparent;color:var(--tx);border:1px solid var(--line);border-radius:4px;padding:6px;font:inherit;font-size:14px}
+textarea{font-size:11px;height:84px;resize:vertical}
+.rb{position:relative;height:34px;margin:16px 4px 6px}
+.rt{position:absolute;left:0;right:0;top:15px;height:4px;background:var(--line)}
+.zn{position:absolute;top:15px;height:4px;background:var(--cyan);opacity:.55}
+.mk{position:absolute;top:6px;width:2px;height:22px;background:var(--tx)}
+.mk.c{background:var(--gold);width:3px;top:2px;height:30px;box-shadow:0 0 10px var(--gold)}
+.rl{display:flex;justify-content:space-between;font-size:11px}
+.r{display:grid;grid-template-columns:112px 1fr 58px;gap:6px;align-items:center;margin:5px 0;font-size:10.5px}
+.t{position:relative;height:10px;background:var(--line)}
+.ax{position:absolute;top:-3px;bottom:-3px;width:1px;background:var(--tx)}
+.b{position:absolute;top:0;bottom:0}
+.b.u{background:var(--grn)}.b.d{background:var(--red)}
+b.u{color:var(--grn)}b.d{color:var(--red)}.r b{text-align:right}
+.nt{font-size:11px;color:var(--dim);margin-top:8px}
+.row{display:flex;gap:8px;margin-top:8px}.row button{flex:1}
+.lr{padding:3px 0;border-bottom:1px solid var(--line);font-size:11px}
+.zb,.zs{position:absolute;top:8px;height:18px;opacity:.2}.zb{background:var(--grn)}.zs{background:var(--red)}
+.zr{display:flex;justify-content:space-between;gap:8px;padding:4px 0;border-bottom:1px solid var(--line);font-size:11px}.zr b{text-align:right}
+</style></head><body><div class="w">
+<div class="hd"><h1>Forex &amp; gold <span>monitor</span></h1><span class="dim">paper trading</span></div>
+<div class="tabs" id="tb"></div>
+
+<div class="p" style="box-shadow:inset 2px 0 0 var(--gold)"><div class="l">Gold: XAUUSD (tap price to open chart)</div><div id="gd"></div><button id="oa" style="width:100%;margin-top:8px">📊 Open all charts</button><div id="ac"></div></div>
+
+<div class="p"><div class="l">Active signals (tap to open)</div><div id="sl"></div></div>
+
+<div class="p"><div class="l">Dashboard: all markets, closest to a signal first (tap to open)</div><div id="db"></div></div>
+
+<div class="p" style="background:#060a11;color:#dce7f4"><div class="l">Market orbit: discovery view</div><canvas id="ob" style="width:100%;height:260px;display:block"></canvas><div class="nt" id="obn"></div><div class="l" style="margin-top:12px">Backtest: before → after ($1,000 start)</div><div id="obb"></div></div>
+
+<div class="p"><div class="l">Data analysis: all markets</div><div id="an"></div></div>
+
+<div class="p hero"><canvas id="g"></canvas>
+<span class="tag" style="left:10px;top:8px" id="pn"></span>
+<span class="tag" style="right:10px;top:8px" id="dt"></span>
+<div class="sig" id="sg">NO DATA</div></div>
+<div class="tabs" id="rg"></div>
+<div class="tabs" id="ls"><button id="pl" style="background:var(--grn);color:#fff;border-color:var(--grn);font-weight:700">LONG</button><button id="ps" style="background:var(--red);color:#fff;border-color:var(--red);font-weight:700">SHORT</button><span id="pm" class="nt" style="align-self:center;flex:2">Paper trade at the last close (demo only)</span></div>
+
+<div class="p"><div class="l">1. Paste the Colab output</div>
+<textarea id="pz" placeholder="XAUUSD|2026-10-15|4176.1|..." aria-label="Colab output"></textarea>
+<div class="row"><button id="pb">Paste from clipboard</button><button id="ap">Apply data</button><button id="ao">Apply old data</button></div>
+<details style="margin-top:8px"><summary style="cursor:pointer;padding:8px;border:1px solid var(--line);border-radius:6px">Colab script (tap to open)</summary><textarea id="cs" readonly aria-label="Colab script" style="height:140px;margin-top:8px"># Run in one Colab cell. Then select the printed lines, paste into the page, tap Apply data.
+import os, numpy as np, pandas as pd
+try: import yfinance as yf
+except ImportError:
+    os.system("pip -q install yfinance"); import yfinance as yf
+W = {"XAUUSD":"GC=F","XAGUSD":"SI=F","WTI":"CL=F","EURUSD":"EURUSD=X","GBPUSD":"GBPUSD=X",
+     "AUDUSD":"AUDUSD=X","NZDUSD":"NZDUSD=X","USDJPY":"USDJPY=X","USDCAD":"USDCAD=X",
+     "USDCHF":"USDCHF=X","SPX":"^GSPC","NDX":"^IXIC","BTCUSD":"BTC-USD",
+     "AAPL":"AAPL","MSFT":"MSFT","NVDA":"NVDA","TSLA":"TSLA","AMZN":"AMZN","GOOGL":"GOOGL","META":"META"}
+if os.path.exists("watchlist.txt"):  # optional: lines like ETHUSD=ETH-USD
+    for s in open("watchlist.txt"):
+        if "=" in s: a, b = s.strip().split("=", 1); W[a] = b
+def bt(c, up, dn, p=1000.0):  # long above 100d high, short below 100d low, exit on 10d level
+    pos, ent, eq, pk, dd, rs = 0, 0, p, p, 0, []
+    for i in range(100, len(c)):
+        x = c[i]
+        if pos == 0:
+            if x &gt; up[i]: pos, ent = 1, x
+            elif x &lt; dn[i]: pos, ent = -1, x
+        if pos == 1 and x &lt; c[i-10:i].min(): rs.append(x/ent-1); eq *= x/ent; pos = 0
+        elif pos == -1 and x &gt; c[i-10:i].max(): rs.append(1-x/ent); eq *= 2-x/ent; pos = 0
+        pk = max(pk, eq); dd = max(dd, 1-eq/pk)
+    return eq, rs, dd
+L, BT, CN, HS, SC = [], [], [], [], []
+for n, t in W.items():
+    try:
+        d = yf.download(t, period="10y", progress=False, auto_adjust=True)
+        if isinstance(d.columns, pd.MultiIndex): d.columns = d.columns.get_level_values(0)
+        d = d.dropna()
+        c, h, l, o = d.Close, d.High, d.Low, d.Open
+        v = c.values
+        up = c.shift(1).rolling(100).max().values; dn = c.shift(1).rolling(100).min().values
+        dlt = c.diff(); g = dlt.clip(lower=0).ewm(alpha=1/14).mean(); s = (-dlt.clip(upper=0)).ewm(alpha=1/14).mean()
+        rsi = 100 - 100/(1 + g/s)
+        tr = pd.concat([h-l, (h-c.shift()).abs(), (l-c.shift()).abs()], axis=1).max(axis=1)
+        atr = tr.ewm(alpha=1/14).mean()
+        L.append(f"{n}|{d.index[-1].date()}|{v[-1]:.6g}|{c.iloc[-100:].max():.6g}|{c.iloc[-100:].min():.6g}|"
+                 f"{c.iloc[-10:].max():.6g}|{c.iloc[-10:].min():.6g}|{rsi.iloc[-1]:.1f}|{atr.iloc[-1]:.6g}")
+        eq, rs, dd = bt(v, up, dn)
+        w = 100*sum(r &gt; 0 for r in rs)/max(len(rs), 1)
+        BT.append(f"BT|{n}|{len(rs)}|{w:.0f}|{dd*100:.0f}|{eq:.0f}")
+        m = len(v)//2; a = bt(v[:m], up[:m], dn[:m]); b = bt(v[m:], up[m:], dn[m:])
+        SC.append(f"SCAN|{t}|{a[0]:.0f}|{b[0]:.0f}|{len(rs)}")
+        CN.append("CND|" + n + "|" + ";".join(f"{o.iloc[i]:.6g},{h.iloc[i]:.6g},{l.iloc[i]:.6g},{c.iloc[i]:.6g}" for i in (-3,-2,-1)))
+        HS.append("HST|" + n + "|" + ",".join(f"{x:.6g}" for x in v[-100:]))
+    except Exception as e:
+        print("skip", n, e)
+print("\n".join(L + BT + SC + CN + HS))
+</textarea><div class="row"><button id="cc">Copy script</button></div></details>
+<div class="nt" id="pm"></div></div>
+
+<div class="p"><div class="l">2. Levels for this pair (editable)</div>
+<div class="ins">
+<div><label for="d">Date</label><input id="d"></div>
+<div><label for="c">Close</label><input id="c" type="number" step="any"></div>
+<div><label for="h">100-day high</label><input id="h" type="number" step="any"></div>
+<div><label for="l">100-day low</label><input id="l" type="number" step="any"></div>
+<div><label for="xh">10-day high</label><input id="xh" type="number" step="any"></div>
+<div><label for="xl">10-day low</label><input id="xl" type="number" step="any"></div>
+<div><label for="r">RSI (14)</label><input id="r" type="number" step="any"></div>
+<div><label for="at">ATR (14)</label><input id="at" type="number" step="any"></div></div>
+<div class="rb"><div class="rt"></div><div class="zb" id="zb"></div><div class="zs" id="zs"></div><div class="zn" id="zn"></div>
+<div class="mk" id="m1"></div><div class="mk" id="m2"></div><div class="mk c" id="mc"></div></div>
+<div class="rl"><span id="lo"></span><span id="hi"></span></div>
+<div class="nt" id="ds"></div>
+<div class="nt">Rule: close above the 100-day high buys, below the 100-day low sells short. Exit on the 10-day levels, with a stop.</div></div>
+
+<div class="p"><div class="l">3. Auto trade zones (calculated from the levels above)</div>
+<div class="ins">
+<div><label for="bal">Paper balance ($)</label><input id="bal" type="number" step="any" value="100"></div>
+<div><label for="rk">Risk per trade (%)</label><input id="rk" type="number" step="any" value="1"></div>
+<div><label for="sp">Fixed stop (%), used if no ATR</label><input id="sp" type="number" step="any" value="3"></div>
+<div><label for="am">ATR stop multiple (0 = fixed)</label><input id="am" type="number" step="any" value="2"></div></div>
+<div id="zt" style="margin-top:8px"></div>
+<div class="nt">Zones update on their own when you apply new data. The page cannot place trades, so use these levels by hand on a demo account.</div></div>
+
+<div class="p"><div class="l">Outlook for this pair (probabilities, not predictions)</div>
+<div class="ins"><div><label for="hz">Horizon (trading days)</label><input id="hz" type="number" step="1" value="5"></div></div>
+<div id="ol" style="margin-top:8px"></div>
+<div class="nt">Built from ATR volatility with no trend assumed, so it shows how far price can plausibly move, not which way. Needs ATR in the data. Real markets have fatter tails than this model.</div></div>
+
+<div class="p"><div class="l">AI judge: second opinion on this setup</div>
+<div class="ins" style="margin-bottom:8px"><div style="grid-column:1/3"><label for="pmk">Prediction market odds (optional, e.g. Fed cut in Dec 62%)</label><input id="pmk" maxlength="300"></div></div>
+<div class="row"><button id="jb" disabled>Judge this setup</button><button id="jd" disabled>Deep judge</button></div>
+<div class="nt" id="jm"></div><div id="jo" style="margin-top:8px"></div>
+<div class="nt">Claude reviews the levels, signal, ATR, RSI, other markets, backtest and your journal against a fixed rubric. It checks the setup against your own rules and does not predict prices. It can be wrong, so treat it as a checklist, not advice.</div></div>
+
+<div class="p"><div class="l">Research sites for this market (open in a new tab)</div><div id="lk"></div>
+<div class="nt">The page cannot load other sites' data itself, so these open the same market on outside charts, news and positioning tools. Compare them with the signal before you act.</div></div>
+
+<div class="p"><div class="l">Candles: last 3 days and pattern</div><div id="cd"></div>
+<div class="nt">Single patterns have weak predictive power on their own. This shows what the last candles look like and how big the next one is likely to be, not which way it will close.</div></div>
+
+<details style="margin-bottom:10px"><summary style="cursor:pointer;padding:10px;border:1px solid var(--line);border-radius:6px;background:var(--panel)">More tools: risk controls, MT5 tickets, scan, journal, backtests</summary><div style="margin-top:10px">
+<div class="p"><div class="l">Portfolio risk controls (from your open paper trades)</div>
+<div class="ins"><div><label for="mr">Max total open risk (%)</label><input id="mr" type="number" step="any" value="3"></div>
+<div><label for="md">Stop trading at drawdown (R)</label><input id="md" type="number" step="any" value="5"></div></div>
+<div id="pr" style="margin-top:8px"></div>
+<div class="nt">USD exposure counts EUR, GBP, AUD, NZD, gold and silver pairs against the USD-first pairs (JPY, CAD, CHF). Risk-on counts stocks and bitcoin. This is a rough guide, not a full correlation model.</div></div>
+
+<div class="p"><div class="l">MT5 order tickets (type these into the MT5 app, demo account)</div>
+<div id="tk"></div>
+<div class="nt">In MT5: tap the pair, then New Order, and set the type to Buy Stop or Sell Stop. Place both as pending orders and cancel the other when one fills. Your broker may add a suffix to the symbol name. Lot math is approximate and varies by broker.</div></div>
+
+<div class="p"><div class="l">Market scan (same rule, 10 years, first half / second half)</div>
+<div id="sc"></div>
+<div class="nt">Paste the scan lines into the box at the top and tap Apply data. Only a market above $1,000 in both halves deserves a second look, and with 13 markets a few will pass by luck.</div></div>
+
+<div class="p"><div class="l">4. Paper trade journal</div>
+<div class="row"><button id="lb">Log paper trade</button><button id="lc">Clear log</button></div>
+<div id="lg" style="margin-top:8px"></div></div>
+
+<div class="p"><div class="l">Backtest end balance from $1,000, costs included</div><div id="bt"></div>
+<div class="nt">Only the last row used data the settings never saw. Its profit was almost all from buying while gold rose.</div></div>
+<div class="p"><div class="l">Live backtest (10 years, 100/10 breakout, $1,000 start, 0.02% cost per side)</div><div id="bl"></div>
+<div class="nt">Comes from the BT lines the Colab cell prints. Fully invested, no leverage. Past results do not predict future ones.</div></div>
+</div></details>
+<div class="nt">Paper trading only. Not financial advice. This page cannot place real trades.</div>
+</div>
+<script>
+const $=i=>document.getElementById(i);
+const col=n=>getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+const PAIRS=['XAUUSD','XAGUSD','WTI','EURUSD','GBPUSD','AUDUSD','NZDUSD','USDJPY','USDCAD','USDCHF','SPX','NDX','BTCUSD','VN30'],K=['c','h','l','xh','xl','r','at'];
+const FX=['EURUSD','GBPUSD','AUDUSD','NZDUSD','USDJPY','USDCAD','USDCHF'];
+const TK={'GC=F':'XAUUSD','SI=F':'XAGUSD','CL=F':'WTI','EURUSD=X':'EURUSD','GBPUSD=X':'GBPUSD','AUDUSD=X':'AUDUSD','NZDUSD=X':'NZDUSD','USDJPY=X':'USDJPY','USDCAD=X':'USDCAD','USDCHF=X':'USDCHF','^GSPC':'SPX','^IXIC':'NDX','BTC-USD':'BTCUSD'};
+const SC={};try{Object.assign(SC,JSON.parse(localStorage.getItem('fxsc')||'{}'))}catch(e){}
+const BTR={};try{Object.assign(BTR,JSON.parse(localStorage.getItem('fxbt')||'{}'))}catch(e){}
+const D={};PAIRS.forEach(p=>D[p]={});
+const Phi=z=>{const t=1/(1+.2316419*Math.abs(z)),d=.3989423*Math.exp(-z*z/2),p=d*t*(.3193815+t*(-.3565638+t*(1.781478+t*(-1.821256+t*1.330274))));return z>0?1-p:p};
+function outlook(){const el=$('ol');el.textContent='';const x=D[cur],N=parseFloat($('hz').value);
+if([x.c,x.h,x.l,x.at,N].some(v=>v==null||isNaN(v))||N<1||x.c<=0){el.className='nt';el.textContent='Apply data that includes ATR (run Colab cell v2) to see the outlook.';return}
+el.className='';const sg=x.at/1.5/x.c*Math.sqrt(N),row=(a,b,k)=>{const d=document.createElement('div'),s1=document.createElement('span'),s2=document.createElement('b');d.className='zr';s1.textContent=a;s2.textContent=b;if(k)s2.className=k;d.append(s1,s2);el.appendChild(d)};
+const pt=lv=>Math.min(100,Math.max(0,200*(1-Phi(Math.abs(Math.log(lv/x.c))/sg)))),pb=x.c>x.h?100:pt(x.h),ps=x.c<x.l?100:pt(x.l);
+row('Likely range (68%)',fm(x.c*Math.exp(-sg))+' to '+fm(x.c*Math.exp(sg)));
+row('Wide range (95%)',fm(x.c*Math.exp(-1.96*sg))+' to '+fm(x.c*Math.exp(1.96*sg)));
+row('Chance of touching buy level '+fm(x.h),pb.toFixed(0)+'%',pb>=50?'u':'');
+row('Chance of touching sell level '+fm(x.l),ps.toFixed(0)+'%',ps>=50?'d':'');
+row('Typical move over '+N+' days','±'+(sg*100).toFixed(1)+'%')}
+let SM=null;
+(async()=>{try{if(window.claude&&claude.use)SM=await claude.use('sample')}catch(e){}
+if(SM){$('jb').disabled=false;$('jd').disabled=false}else $('jm').textContent='The AI judge works when this page is opened in Claude.'})();
+async function runJ(deep){const x=D[cur],jm=$('jm'),jo=$('jo');jo.textContent='';
+if(!SM||[x.c,x.h,x.l].some(v=>v==null||isNaN(v))){jm.textContent='Apply data for this market first.';return}
+const oth=PAIRS.filter(p=>p!==cur&&D[p].c!=null&&(D[p].c>D[p].h||D[p].c<D[p].l)).join(', ')||'none',dn=LOG.filter(e=>e.x!=null);
+const data={market:cur,date:x.d,close:x.c,high100:x.h,low100:x.l,high10:x.xh,low10:x.xl,rsi:x.r,atr:x.at,signal:SIG||'none',stopPct:+(stp()*100).toFixed(2),riskPct:$('rk').value,balance:$('bal').value,otherMarketsWithSignal:oth,lastCandlePattern:pat(cur),predictionMarketOdds:($('pmk').value||'none').slice(0,300),backtest10y:BTR[cur]||'none',closedTrades:dn.length,totalR:+dn.reduce((s,e)=>s+e.R,0).toFixed(2)};
+const q='You are a strict, skeptical risk reviewer for a paper-trading 100-day/10-day breakout system (buy above the 100-day high, sell below the 100-day low, exit on the 10-day level). Judge ONLY the setup in the data. Do not predict prices. Missing data must lower your confidence. Score 0-10: signal_quality (is there a real breakout, how close to a trigger), volatility_fit (stop vs ATR), risk_sizing (risk % and balance sensible), context (other markets with signals suggest correlated risk; RSI extension), evidence (backtest and journal support the rule). Return ONLY JSON: {"verdict":"TAKE|WAIT|SKIP","score":0-100,"criteria":{"signal_quality":n,"volatility_fit":n,"risk_sizing":n,"context":n,"evidence":n},"reasons":[max 3 short strings],"risks":[max 3 short strings],"next_step":"one short sentence"}. Data: '+JSON.stringify(data);
+const dp=' DEEP MODE: think through scenarios carefully before scoring. Also add to the JSON: "scenarios":[max 3 objects {"name","condition","action"} covering breakout holds, false breakout, range-bound], "invalidation":"the level or condition that voids the setup", "change_my_mind":"what new data would change your verdict".';
+jm.textContent=deep?'Deep review, this can take a minute...':'Judging...';$('jb').disabled=true;$('jd').disabled=true;
+try{const o=await SM.json(deep?q+dp:q,deep?{modelTier:'complex',cache:false}:undefined);jm.textContent='';
+const ln=(a,b,k)=>{const d=document.createElement('div'),s1=document.createElement('span'),s2=document.createElement('b');d.className='zr';s1.textContent=a;s2.textContent=b;if(k)s2.className=k;d.append(s1,s2);jo.appendChild(d)};
+const vd=String(o.verdict||'').toUpperCase();ln('Verdict',vd+' · score '+(+o.score||0)+'/100',vd==='TAKE'?'u':vd==='SKIP'?'d':'');
+Object.entries(o.criteria||{}).forEach(([k,v])=>ln(k.replace('_',' '),String(v)+'/10'));
+(o.reasons||[]).slice(0,3).forEach(t=>ln('Why',String(t)));(o.risks||[]).slice(0,3).forEach(t=>ln('Risk',String(t),'d'));
+(o.scenarios||[]).slice(0,3).forEach(s=>ln(String(s.name||'Scenario'),String(s.condition||'')+' → '+String(s.action||'')));if(o.invalidation)ln('Invalidation',String(o.invalidation));if(o.change_my_mind)ln('Would change verdict',String(o.change_my_mind));if(o.next_step)ln('Next',String(o.next_step))}
+catch(e){jm.textContent=e&&e.code==='not_granted'?'AI judge was not allowed. Allow it in the page permissions and try again.':'The judge could not answer. Try again in a moment.'}
+$('jb').disabled=false;$('jd').disabled=false}
+$('jb').onclick=()=>runJ(false);$('jd').onclick=()=>runJ(true);
+const TV={XAUUSD:'OANDA:XAUUSD',XAGUSD:'OANDA:XAGUSD',WTI:'NYMEX:CL1!',SPX:'SP:SPX',NDX:'NASDAQ:IXIC',BTCUSD:'BITSTAMP:BTCUSD'};
+function links(){const el=$('lk');el.textContent='';const yt=Object.keys(TK).find(k=>TK[k]===cur)||'';
+const L=[['TradingView chart',(TV[cur]||FX.includes(cur))?'https://www.tradingview.com/chart/?symbol='+encodeURIComponent(TV[cur]||'OANDA:'+cur):'https://www.tradingview.com/symbols/'+encodeURIComponent(cur)+'/'],['Yahoo Finance quote','https://finance.yahoo.com/quote/'+encodeURIComponent(yt||cur)],['Economic calendar (Forex Factory)','https://www.forexfactory.com/calendar'],['Economic data (Trading Economics)','https://tradingeconomics.com/calendar'],['Positioning (CFTC COT reports)','https://www.cftc.gov/MarketReports/CommitmentsofTraders/index.htm'],['Prediction market: Polymarket','https://polymarket.com'],['Prediction market: Kalshi','https://kalshi.com/markets'],['Forecasts: Metaculus','https://www.metaculus.com']];
+L.forEach(([t,u])=>{const d=document.createElement('div'),a=document.createElement('a');d.className='zr';a.textContent=t+' ↗';a.href=u;a.target='_blank';a.rel='noopener noreferrer';a.style.color='var(--cyan)';d.appendChild(a);el.appendChild(d)});const tb=$('tvb');if(tb)tb.href=L[0][1]}
+const HS={};try{Object.assign(HS,JSON.parse(localStorage.getItem('fxhs')||'{}'))}catch(e){}
+const CN={};try{Object.assign(CN,JSON.parse(localStorage.getItem('fxcn')||'{}'))}catch(e){}
+function pat(p){const k=CN[p];if(!k||k.length<2)return 'none';const a=k[k.length-2],[o,h,l,c]=k[k.length-1],bd=Math.abs(c-o),rg=h-l,up=h-Math.max(o,c),lw=Math.min(o,c)-l,pb=Math.abs(a[3]-a[0]);if(!(rg>0))return 'none';
+if(bd<=.1*rg)return 'Doji (indecision)';
+if(c>o&&a[3]<a[0]&&c>=a[0]&&o<=a[3]&&bd>pb)return 'Bullish engulfing (bullish hint)';
+if(c<o&&a[3]>a[0]&&c<=a[0]&&o>=a[3]&&bd>pb)return 'Bearish engulfing (bearish hint)';
+if(lw>=2*bd&&up<=bd)return 'Hammer (bullish hint)';
+if(up>=2*bd&&lw<=bd)return 'Shooting star (bearish hint)';
+return 'No clear pattern'}
+function candles(){const el=$('cd');el.textContent='';const k=CN[cur];if(!k||k.length<3||k.some(q=>q.some(isNaN))){el.className='nt';el.textContent='Run Colab cell v3 (adds CND lines) and paste the output to see candles.';return}el.className='';
+const ns='http://www.w3.org/2000/svg',e=(t,a)=>{const n=document.createElementNS(ns,t);for(const i in a)n.setAttribute(i,a[i]);return n},s=e('svg',{viewBox:'0 0 300 110'});s.style.cssText='width:100%;height:110px';
+const mn=Math.min(...k.map(q=>q[2])),mx=Math.max(...k.map(q=>q[1])),y=v=>5+(mx-v)/((mx-mn)||1)*100;
+k.forEach((q,i)=>{const cx=50+i*100,cl=col(q[3]>=q[0]?'--grn':'--red'),top=y(Math.max(q[0],q[3]));s.appendChild(e('line',{x1:cx,x2:cx,y1:y(q[1]),y2:y(q[2]),stroke:cl,'stroke-width':2}));s.appendChild(e('rect',{x:cx-15,y:top,width:30,height:Math.max(2,Math.abs(y(q[0])-y(q[3]))),fill:cl}))});el.appendChild(s);
+const row=(a,b)=>{const d=document.createElement('div'),s1=document.createElement('span'),s2=document.createElement('b');d.className='zr';s1.textContent=a;s2.textContent=b;d.append(s1,s2);el.appendChild(d)},x=D[cur];
+row('Last candle',pat(cur));if(x.at)row('Next candle, typical size','about '+fm(x.at)+' high to low');if(x.at)row('Next close, 68% range',fm(x.c-x.at/1.5)+' to '+fm(x.c+x.at/1.5))}
+function ddv(){let eq=0,pk=0;LOG.filter(e=>e.x!=null).forEach(e=>{eq+=e.R;pk=Math.max(pk,eq)});return pk-eq}
+const USQ=['EURUSD','GBPUSD','AUDUSD','NZDUSD','XAUUSD','XAGUSD'],USB=['USDJPY','USDCAD','USDCHF'],RO=['SPX','NDX','BTCUSD'];
+const usd=(p,s)=>USQ.includes(p)?(s==='BUY'?-1:1):USB.includes(p)?(s==='BUY'?1:-1):0,rsk=(p,s)=>RO.includes(p)?(s==='BUY'?1:-1):0;
+function risk(){const el=$('pr');el.textContent='';const op=LOG.filter(e=>e.x==null),mr=parseFloat($('mr').value),md=parseFloat($('md').value);if(isNaN(mr)||isNaN(md))return;
+const tot=op.reduce((s,e)=>s+(e.r||1),0),dd=ddv(),nr=parseFloat($('rk').value)||0;let u=0,rk=0;op.forEach(e=>{u+=usd(e.p,e.s);rk+=rsk(e.p,e.s)});
+const ln=(a,b,k)=>{const d=document.createElement('div'),s1=document.createElement('span'),s2=document.createElement('b');d.className='zr';s1.textContent=a;s2.textContent=b;if(k)s2.className=k;d.append(s1,s2);el.appendChild(d)};
+const ex=(n,v)=>v>0?'net long ('+v+')':v<0?'net short ('+(-v)+')':'balanced';
+ln('Open risk',tot.toFixed(1)+'% of '+mr+'% cap ('+op.length+' open)',tot>mr?'d':'');
+ln('Journal drawdown',dd.toFixed(2)+'R of '+md+'R limit',dd>=md?'d':'');
+ln('USD exposure',ex('USD',u),Math.abs(u)>=2?'d':'');ln('Risk-on exposure',ex('RO',rk),Math.abs(rk)>=2?'d':'');
+const w=[];if(dd>=md)w.push('STOP: drawdown limit reached. Logging is blocked. Pause and review your journal.');
+if(tot>mr)w.push('Open risk is above your cap. Close or reduce a trade before adding.');
+if(SIG){if(tot+nr>mr)w.push('A new '+cur+' trade would take open risk above the cap.');if(usd(cur,SIG)*u>0)w.push('A '+cur+' '+SIG+' adds to your existing USD bet, so it is not a separate trade.');if(rsk(cur,SIG)*rk>0)w.push('A '+cur+' '+SIG+' adds to your existing risk-on bet.')}
+w.forEach(t=>{const d=document.createElement('div');d.className='nt';d.style.color=col('--red');d.textContent=t;el.appendChild(d)})}
+let RN=100,HI=null;
+(function(){const el=$('rg');[20,50,100].forEach(n=>{const b=document.createElement('button');b.textContent=n+' days';b.className=n===RN?'on':'';b.onclick=()=>{RN=n;[...el.children].forEach(x=>x.className=x===b?'on':'');draw()};el.appendChild(b)});const a=document.createElement('a');a.id='tvb';a.textContent='📊 Full chart ↗';a.target='_blank';a.rel='noopener noreferrer';a.style.cssText='flex:1;min-width:110px;text-align:center;border:1px solid var(--line);border-radius:4px;padding:8px;color:var(--cyan);text-decoration:none';el.appendChild(a)})();
+$('g').addEventListener('pointermove',e=>{const r=cv.getBoundingClientRect(),n=((HS[cur]||[]).slice(-RN).length||2)-1;HI=Math.round((e.clientX-r.left-100)/Math.max(1,W-114)*n);draw()});
+$('g').addEventListener('pointerleave',()=>{HI=null;draw()});
+$('g').addEventListener('click',()=>{const x=D[cur]||{};if([x.c,x.h,x.l].some(v=>v==null||isNaN(v))||x.h<=x.l){const z=$('pz');try{z.scrollIntoView({behavior:'smooth',block:'center'})}catch(e){}z.focus()}});
+function draw(){const x=D[cur]||{},{c,h,l,xh,xl}=x,dm=col('--dim'),tx=col('--tx'),gr=col('--grn'),rd=col('--red');cx.clearRect(0,0,W,H);cx.textBaseline='alphabetic';cx.font='10px ui-monospace,Menlo,monospace';
+if([c,h,l].some(v=>v==null||isNaN(v))||h<=l){cx.fillStyle=dm;cx.textAlign='left';cx.fillText('No data yet. Tap here to add data.',16,H/2);cv.style.cursor='pointer';return}cv.style.cursor='';
+const k=CN[cur],hk=k&&k.length>=3&&!k.some(q=>q.some(isNaN)),vs=[c,h,l,xh,xl].filter(v=>v!=null&&!isNaN(v));if(hk)k.forEach(q=>vs.push(q[1],q[2]));const hs=HS[cur]&&HS[cur].length>=20&&!HS[cur].some(isNaN)?HS[cur].slice(-RN):null;if(hs)hs.forEach(v=>vs.push(v));
+const mn0=Math.min(...vs),mx0=Math.max(...vs),pd=(mx0-mn0)*.1||1,mn=mn0-pd,mx=mx0+pd,L0=100,R0=W-14,T0=30,B0=H-34,y=v=>B0-(v-mn)/(mx-mn)*(B0-T0);
+cx.globalAlpha=.1;cx.fillStyle=gr;cx.fillRect(L0,T0,R0-L0,Math.max(0,y(h)-T0));cx.fillStyle=rd;cx.fillRect(L0,y(l),R0-L0,Math.max(0,B0-y(l)));cx.globalAlpha=1;
+const ln=(v,cl,lb,ds)=>{if(v==null||isNaN(v))return;cx.strokeStyle=cl;cx.setLineDash(ds?[4,4]:[]);cx.lineWidth=1.2;cx.beginPath();cx.moveTo(L0,y(v));cx.lineTo(R0,y(v));cx.stroke();cx.setLineDash([]);cx.fillStyle=cl;cx.textAlign='left';cx.fillText(lb+' '+fm(v),4,y(v)+3)};
+ln(h,gr,'H100');ln(l,rd,'L100');ln(xh,dm,'H10',1);ln(xl,dm,'L10',1);
+if(hk&&!hs)k.forEach((q,i)=>{const xx=R0-110+i*34,cl=q[3]>=q[0]?gr:rd;cx.strokeStyle=cl;cx.fillStyle=cl;cx.lineWidth=1.5;cx.beginPath();cx.moveTo(xx,y(q[1]));cx.lineTo(xx,y(q[2]));cx.stroke();cx.fillRect(xx-7,y(Math.max(q[0],q[3])),14,Math.max(2,Math.abs(y(q[0])-y(q[3]))))});
+if(hs){ln(c,col('--cyan'),'Last',1);const gdt=cx.createLinearGradient(0,T0,0,B0);gdt.addColorStop(0,'rgba(56,225,255,.35)');gdt.addColorStop(1,'rgba(56,225,255,0)');cx.fillStyle=gdt;cx.beginPath();cx.moveTo(L0,B0);hs.forEach((v,i)=>cx.lineTo(L0+(R0-L0)*i/(hs.length-1),y(v)));cx.lineTo(R0,B0);cx.closePath();cx.fill();cx.strokeStyle=col('--cyan');cx.lineWidth=1.8;cx.beginPath();hs.forEach((v,i)=>{const xx=L0+(R0-L0)*i/(hs.length-1);i?cx.lineTo(xx,y(v)):cx.moveTo(xx,y(v))});cx.stroke();if(HI!=null){const i=Math.max(0,Math.min(hs.length-1,HI)),xx=L0+(R0-L0)*i/(hs.length-1);cx.strokeStyle=dm;cx.lineWidth=1;cx.beginPath();cx.moveTo(xx,T0);cx.lineTo(xx,B0);cx.stroke();cx.fillStyle=tx;cx.textAlign=xx>W/2?'right':'left';cx.fillText(fm(hs[i])+' · '+(hs.length-1-i)+'d ago',xx+(xx>W/2?-6:6),T0-6)}}
+cx.fillStyle=tx;cx.beginPath();cx.arc(hs?R0:L0+10,y(c),4,0,6.283);cx.fill();cx.textAlign=hs?'right':'left';cx.fillText('Close '+fm(c),hs?R0-10:L0+20,y(c)+(y(c)>B0-14?-8:14))}
+function paper(s){const x=D[cur],pm=$('pm');if(!x||x.c==null||isNaN(x.c)){pm.textContent='Apply data for this market first.';return}if(ddv()>=parseFloat($('md').value)){pm.textContent='Drawdown limit reached. Logging is blocked.';return}LOG.push({d:x.d||new Date().toISOString().slice(0,10),p:cur,s,c:x.c,sp:stp()||.03,r:parseFloat($('rk').value)||1});sl();rl();pm.textContent='Logged '+(s==='BUY'?'LONG ':'SHORT ')+cur+' at '+fm(x.c)+'. See the journal under More tools.'}
+$('pl').onclick=()=>paper('BUY');$('ps').onclick=()=>paper('SELL');
+function stp(){const x=D[cur]||{},am=parseFloat($('am').value),f=parseFloat($('sp').value)/100;return x.at&&x.c&&am>0?am*x.at/x.c:f}
+function ana(){const el=$('an');el.textContent='';const ok=Object.keys(D).filter(k=>{const x=D[k];return x&&[x.c,x.h,x.l].every(v=>v!=null&&!isNaN(v))&&x.h>x.l});
+if(!ok.length){el.className='nt';el.textContent='No data yet. Paste the Colab output and tap Apply data.';return}el.className='';
+const add=(a,b,cl)=>{const d=document.createElement('div'),s=document.createElement('span'),v=document.createElement('b');d.className='zr';s.textContent=a;v.textContent=b;if(cl)v.className=cl;d.append(s,v);el.appendChild(d)};
+const buy=ok.filter(k=>D[k].c>D[k].h),sell=ok.filter(k=>D[k].c<D[k].l),rest=ok.filter(k=>!buy.includes(k)&&!sell.includes(k));
+add('Markets with data',ok.length+' of '+PAIRS.length);
+add('Buy signals',buy.length?buy.join(', '):'none',buy.length?'u':'');
+add('Sell signals',sell.length?sell.join(', '):'none',sell.length?'d':'');
+const near=rest.map(k=>{const x=D[k];return{k,p:Math.min((x.h-x.c)/x.c,(x.c-x.l)/x.c)*100}}).sort((a,b)=>a.p-b.p).slice(0,3);
+if(near.length)add('Closest to a signal',near.map(o=>o.k+' '+o.p.toFixed(1)+'%').join(', '));
+const up=ok.filter(k=>(D[k].c-D[k].l)/(D[k].h-D[k].l)>.5).length;add('In upper half of 100-day range',up+' of '+ok.length);
+const rs=ok.filter(k=>D[k].r!=null&&!isNaN(D[k].r)),ob=rs.filter(k=>D[k].r>=70),os=rs.filter(k=>D[k].r<=30);
+if(rs.length)add('RSI 70+ / 30- (info only)',(ob.length?ob.join(', '):'none')+' / '+(os.length?os.join(', '):'none'));
+const vo=ok.filter(k=>D[k].at&&D[k].c>0).map(k=>({k,p:D[k].at/D[k].c*100})).sort((a,b)=>b.p-a.p);
+if(vo.length>1){add('Most volatile (ATR % of price)',vo[0].k+' '+vo[0].p.toFixed(2)+'%');add('Calmest',vo[vo.length-1].k+' '+vo[vo.length-1].p.toFixed(2)+'%')}
+const bk=Object.keys(BTR).sort((a,b)=>BTR[b].e-BTR[a].e);
+if(bk.length){const w=bk.filter(k=>BTR[k].e>1000).length,aw=bk.reduce((s,k)=>s+BTR[k].w,0)/bk.length;add('Backtests that ended above $1,000',w+' of '+bk.length,w*2>=bk.length?'u':'d');add('Best / worst backtest',bk[0]+' $'+BTR[bk[0]].e+' / '+bk[bk.length-1]+' $'+BTR[bk[bk.length-1]].e);add('Average win rate',aw.toFixed(0)+'%')}
+const sk=Object.keys(SC),both=sk.filter(k=>SC[k].a>1000&&SC[k].b>1000);
+if(sk.length)add('Profitable in both halves of history',both.length+' of '+sk.length+(both.length?': '+both.join(', '):''),both.length?'u':'');
+const ds=ok.map(k=>D[k].d).filter(Boolean).sort();if(ds.length){const old=(Date.now()-new Date(ds[0]))/864e5>4;add('Oldest data',ds[0],old?'d':'')}
+const hr=Object.keys(HS).filter(k=>HS[k]&&HS[k].length>1&&HS[k][0]>0&&!isNaN(HS[k][HS[k].length-1])).map(k=>[k,(HS[k][HS[k].length-1]/HS[k][0]-1)*100]).sort((a,b)=>b[1]-a[1]);
+if(hr.length){const lb=document.createElement('div'),bx=document.createElement('div');lb.className='l';lb.style.marginTop='12px';lb.textContent='Chart: change over the last 100 days';bx.id='ch';el.append(lb,bx);const m=Math.max(5,Math.ceil(Math.max(...hr.map(r=>Math.abs(r[1])))/5)*5);bars('ch',hr,0,-m,m,v=>(v>0?'+':'')+v.toFixed(1)+'%')}
+const n=document.createElement('div');n.className='nt';n.textContent='Counts only. With many markets a few will look good by luck, so treat this as a screen, not a signal.';el.appendChild(n)}
+function btl(){const el=$('bl');el.textContent='';const ks=Object.keys(BTR);if(!ks.length){el.className='nt';el.textContent='No backtest yet. Run the Colab cell and paste its BT lines.';return}el.className='';ks.sort((a,b)=>BTR[b].e-BTR[a].e).forEach(k=>{const v=BTR[k],d=document.createElement('div'),s1=document.createElement('span'),s2=document.createElement('b');d.className='zr';s1.textContent=k+' · '+v.n+' trades · win '+v.w+'% · max DD '+v.d+'%';s2.textContent='$'+v.e;s2.className=v.e>1000?'u':'d';d.append(s1,s2);el.appendChild(d)})}
+D.XAUUSD={d:'2026-10-15',c:4176.1,h:4697.8,l:3992.1,xh:4216.3,xl:4107.9,r:null};
+try{const s=localStorage.getItem('fxd');if(s)Object.assign(D,JSON.parse(s))}catch(e){}
+Object.keys(D).forEach(k=>{if(!PAIRS.includes(k))PAIRS.push(k)});
+const sv=()=>{try{localStorage.setItem('fxd',JSON.stringify(D))}catch(e){}};
+let cur='XAUUSD',SIG=null;
+const fm=v=>v>=1000?v.toFixed(1):v>=20?v.toFixed(3):v>=1?v.toFixed(5):Math.abs(v)<.01?Number(v).toPrecision(4):v.toFixed(5);
+
+const cv=$('g'),cx=cv.getContext('2d');let W,H;
+function fit(){const r=Math.min(devicePixelRatio||1,2);W=cv.clientWidth;H=cv.clientHeight;cv.width=W*r;cv.height=H*r;cx.setTransform(r,0,0,r,0,0)}
+const N=170,P=[],E=[];
+for(let i=0;i<N;i++){const y=1-2*(i+.5)/N,r=Math.sqrt(1-y*y),t=Math.PI*(1+Math.sqrt(5))*i;P.push([Math.cos(t)*r,y,Math.sin(t)*r])}
+for(let i=0;i<N;i++){const d=[];for(let j=0;j<N;j++)if(j!==i){const a=P[i],b=P[j];d.push([(a[0]-b[0])**2+(a[1]-b[1])**2+(a[2]-b[2])**2,j])}
+d.sort((p,q)=>p[0]-q[0]);for(let k=0;k<3;k++)E.push([i,d[k][1]])}
+let a=0;
+function drawOld(){const g=col('--gold'),c=col('--cyan'),R=Math.min(W,H)*.4,ox=W/2,oy=H/2,s=Math.sin(a),co=Math.cos(a);
+cx.clearRect(0,0,W,H);
+const Q=P.map(p=>{const x=p[0]*co+p[2]*s,z=-p[0]*s+p[2]*co,y=p[1]*.94-z*.34,z2=p[1]*.34+z*.94;return[ox+x*R,oy+y*R,z2]});
+cx.lineWidth=.6;
+for(const[i,j]of E){const A=Q[i],B=Q[j],d=(A[2]+B[2])/2;cx.globalAlpha=.1+.4*(d+1)/2;cx.strokeStyle=d>0?g:c;cx.beginPath();cx.moveTo(A[0],A[1]);cx.lineTo(B[0],B[1]);cx.stroke()}
+for(const q of Q){cx.globalAlpha=.3+.7*(q[2]+1)/2;cx.fillStyle=q[2]>0?g:c;cx.beginPath();cx.arc(q[0],q[1],1.1+1.3*(q[2]+1)/2,0,6.283);cx.fill()}
+cx.globalAlpha=1}
+const still=matchMedia('(prefers-reduced-motion: reduce)').matches;
+fit();
+addEventListener('resize',()=>{fit();draw()});
+
+function tabs(){$('tb').innerHTML='';PAIRS.forEach(p=>{const b=document.createElement('button');b.textContent=p;b.className=p===cur?'on':'';b.onclick=()=>{cur=p;tabs();fill();upd()};$('tb').appendChild(b)})}
+function fill(){const x=D[cur];$('sp').value=FX.includes(cur)?1:3;$('d').value=x.d||'';K.forEach(k=>$(k).value=x[k]==null||isNaN(x[k])?'':x[k])}
+function upd(){
+const x=D[cur];x.d=$('d').value;K.forEach(k=>{const v=parseFloat($(k).value);x[k]=isNaN(v)?null:v});sv();
+dash();sgl();ana();orb();gold();allc();outlook();links();candles();risk();draw();$('pn').textContent=cur+' daily · 100/10 breakout';$('dt').textContent=x.d||'';zones();tickets();
+const{c,h,l,xh,xl,r}=x;SIG=null;
+if([c,h,l,xh,xl].some(v=>v==null)||h<=l){$('sg').textContent='NO DATA';$('sg').style.color=col('--dim');$('lb').disabled=true;
+['zn','m1','m2','mc','zb','zs'].forEach(i=>$(i).style.left='-10px');$('lo').textContent='';$('hi').textContent='';$('ds').textContent='Paste the Colab output above, or type the levels.';return}
+let s='NO SIGNAL',k='--dim';
+if(c>h){s='BUY SIGNAL';k='--grn';SIG='BUY'}else if(c<l){s='SELL SIGNAL';k='--red';SIG='SELL'}
+$('sg').textContent=s;if(!SIG){const sp=document.createElement('span');sp.style.cssText='font-size:12px;font-weight:400;margin-left:8px';const db=(h-c)/c*100,ds=(c-l)/c*100;sp.textContent=db<=ds?db.toFixed(1)+'% to buy level':ds.toFixed(1)+'% to sell level';$('sg').appendChild(sp)}$('sg').style.color=col(k);$('lb').disabled=!SIG;
+const pad=(h-l)*.12,mn=l-pad,mx=h+pad,p=v=>Math.max(0,Math.min(100,(v-mn)/(mx-mn)*100));
+$('zn').style.left=p(l)+'%';$('zn').style.width=(p(h)-p(l))+'%';$('zb').style.left=p(h)+'%';$('zb').style.width=(100-p(h))+'%';$('zs').style.left='0';$('zs').style.width=p(l)+'%';
+$('m1').style.left=p(xl)+'%';$('m2').style.left=p(xh)+'%';$('mc').style.left=p(c)+'%';
+$('lo').textContent='low '+fm(l);$('hi').textContent='high '+fm(h);
+let t=c>=l&&c<=h?((h-c)/h*100).toFixed(1)+'% below the 100-day high, '+((c-l)/l*100).toFixed(1)+'% above the 100-day low':'Price is outside the 100-day range';
+if(r!=null)t+='. RSI '+r.toFixed(1)+' (info only, RSI rules showed no edge in your tests)';
+$('ds').textContent=t}
+K.concat('d','bal','rk','sp','am','hz','mr','md').forEach(i=>$(i).addEventListener('input',upd));
+
+function dash(){const el=$('db');el.textContent='';const rows=[];
+PAIRS.forEach(p=>{const x=D[p];if([x.c,x.h,x.l].some(v=>v==null||isNaN(v))||x.h<=x.l){rows.push({p,s:'',nd:1,dist:1e9});return}const s=x.c>x.h?'BUY':x.c<x.l?'SELL':'';rows.push({p,s,r:x.r,d:x.d,dist:s?0:Math.min((x.h-x.c)/x.c,(x.c-x.l)/x.c)*100})});
+if(!rows.length){el.className='nt';el.textContent='No active markets yet. Paste the Colab output and tap Apply data.';return}
+el.className='';rows.sort((a,b)=>a.dist-b.dist);
+rows.forEach(o=>{const d=document.createElement('div'),a=document.createElement('span'),b=document.createElement('b');d.className='zr';d.style.cursor='pointer';a.textContent=o.p+(o.p===cur?' ◂':'');b.textContent=o.nd?'no data yet':o.s?o.s+' SIGNAL':o.dist.toFixed(1)+'% to trigger'+(o.r!=null?' · RSI '+o.r.toFixed(0):'');if(o.nd)d.style.opacity='.6';if(o.s)b.className=o.s==='BUY'?'u':'d';d.onclick=()=>{cur=o.p;tabs();fill();upd();try{$('g').scrollIntoView({behavior:'smooth',block:'start'})}catch(e){}};b.textContent+=' ›';d.append(a,b);el.appendChild(d)});
+const old=rows.filter(o=>o.d&&(Date.now()-new Date(o.d))/864e5>4).length;if(old){const n=document.createElement('div');n.className='nt';n.textContent=old+' market(s) have data older than 4 days. Re-run the Colab cell.';el.appendChild(n)}}
+function orb(){const cv2=$('ob');if(!cv2)return;const rt=Math.min(devicePixelRatio||1,2),w=cv2.clientWidth||300,h=260;cv2.width=w*rt;cv2.height=h*rt;const c2=cv2.getContext('2d');c2.setTransform(rt,0,0,rt,0,0);c2.fillStyle='#060a11';c2.fillRect(0,0,w,h);
+const ks=Object.keys(HS).filter(k=>HS[k]&&HS[k].length>10),on=$('obn');
+if(!ks.length){c2.fillStyle='#7e91a9';c2.font='11px monospace';c2.textAlign='center';c2.fillText('Apply data that includes HST lines to see the orbit',w/2,h/2);on.textContent=''}else{
+const X=w/2,Y=h/2,R0=Math.min(w,h)*.2,R1=Math.min(w,h)*.46,cols=['#f6b93b','#38e1ff','#3fe08f','#ff5c6c','#a78bfa','#f472b6','#60a5fa','#fbbf24'];
+c2.strokeStyle='#1c293a';c2.lineWidth=1;[R0,(R0+R1)/2,R1].forEach(r=>{c2.beginPath();c2.arc(X,Y,r,0,6.283);c2.stroke()});
+ks.forEach((k,j)=>{const a=HS[k],mn=Math.min(...a),mx=Math.max(...a);if(!(mx>mn))return;c2.strokeStyle=cols[j%cols.length];c2.globalAlpha=k===cur?1:.6;c2.lineWidth=k===cur?2.4:1;c2.beginPath();a.forEach((v,i)=>{const th=i/(a.length-1)*6.283*.96-1.5708+j*.05,rd=R0+(R1-R0)*(v-mn)/(mx-mn),x=X+rd*Math.cos(th),y=Y+rd*Math.sin(th);i?c2.lineTo(x,y):c2.moveTo(x,y)});c2.stroke()});
+c2.globalAlpha=1;c2.fillStyle='#dce7f4';c2.font='700 16px monospace';c2.textAlign='center';c2.fillText(String(ks.length),X,Y+2);c2.fillStyle='#7e91a9';c2.font='9px monospace';c2.fillText('MARKETS',X,Y+16);
+on.textContent='Each line is one market over the last 100 days, going around the circle. Closer to the outer ring means closer to its own high. The open market is thicker.'}
+const bx=$('obb');bx.textContent='';const bk=Object.keys(BTR).sort((a,b)=>BTR[b].e-BTR[a].e).slice(0,8);
+if(!bk.length){const n=document.createElement('div');n.className='nt';n.textContent='No backtest yet. Apply data that includes BT lines.';bx.appendChild(n);return}
+const lo=Math.min(1000,...bk.map(k=>BTR[k].e)),hi=Math.max(1000,...bk.map(k=>BTR[k].e)),sp=(hi-lo)||1,ps=v=>5+(v-lo)/sp*90;
+bk.forEach(k=>{const e=BTR[k].e,row=document.createElement('div'),nm=document.createElement('span'),tr=document.createElement('div'),d0=document.createElement('i'),d1=document.createElement('i'),pc=document.createElement('b');row.style.cssText='display:grid;grid-template-columns:78px 1fr 56px;gap:6px;align-items:center;margin:8px 0;font-size:10.5px;color:#dce7f4';nm.textContent=k;tr.style.cssText='position:relative;height:2px;background:#1c293a';
+const dot=(el,v,c)=>{el.style.cssText='position:absolute;top:50%;left:'+ps(v)+'%;width:9px;height:9px;border-radius:50%;transform:translate(-50%,-50%);background:'+c};dot(d0,1000,'#dce7f4');dot(d1,e,e>=1000?'#3fe08f':'#ff5c6c');
+pc.style.cssText='text-align:right;color:'+(e>=1000?'#3fe08f':'#ff5c6c');pc.textContent=((e/1000-1)*100>0?'+':'')+((e/1000-1)*100).toFixed(0)+'%';tr.append(d0,d1);row.append(nm,tr,pc);bx.appendChild(row)})}
+window.addEventListener('resize',orb);
+let AO=false;
+function allc(){const bt=$('oa'),el=$('ac');if(!bt||!el)return;bt.textContent=AO?'📊 Close all charts':'📊 Open all charts';el.textContent='';el.style.cssText='';el.className='';if(!AO)return;
+const ks=Object.keys(HS).filter(k=>HS[k]&&HS[k].length>10&&D[k]);
+if(!ks.length){el.className='nt';el.textContent='No chart data yet. Paste the Colab output (with HST lines) and tap Apply data.';return}
+el.style.cssText='display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:8px';
+ks.forEach(k=>{const a=HS[k],mn=Math.min(...a),mx=Math.max(...a),sp=(mx-mn)||1,last=a[a.length-1],ch=(last/a[0]-1)*100,c=document.createElement('div'),t=document.createElement('div');
+c.style.cssText='border:1px solid var(--line);border-radius:6px;padding:6px;cursor:pointer;min-width:0'+(k===cur?';outline:1px solid var(--gold)':'');t.className='nt';t.style.margin='0 0 4px';t.textContent=k+' '+fm(last)+' · '+(ch>0?'+':'')+ch.toFixed(1)+'%';
+const NS='http://www.w3.org/2000/svg',s=document.createElementNS(NS,'svg'),pl=document.createElementNS(NS,'polyline');s.setAttribute('viewBox','0 0 100 40');s.setAttribute('preserveAspectRatio','none');s.style.cssText='width:100%;height:56px;display:block';
+pl.setAttribute('points',a.map((v,i)=>(i/(a.length-1)*100).toFixed(1)+','+(38-(v-mn)/sp*36).toFixed(1)).join(' '));pl.setAttribute('fill','none');pl.setAttribute('vector-effect','non-scaling-stroke');pl.style.cssText='stroke:var('+(ch>=0?'--grn':'--red')+');stroke-width:1.5';s.appendChild(pl);c.append(t,s);
+c.onclick=()=>{cur=k;tabs();fill();upd();try{$('g').scrollIntoView({behavior:'smooth',block:'start'})}catch(e){}};el.appendChild(c)})}
+(function(){const b=$('oa');if(b)b.onclick=()=>{AO=!AO;allc()}})();
+function gold(){const el=$('gd');el.textContent='';const x=D.XAUUSD;
+if(!x||[x.c,x.h,x.l].some(v=>v==null||isNaN(v))||x.h<=x.l){el.className='nt';el.textContent='No gold data yet. Paste the Colab output and tap Apply data.';return}
+el.className='';const sg=x.c>x.h?'BUY SIGNAL':x.c<x.l?'SELL SIGNAL':'NO SIGNAL',sc=x.c>x.h?'--grn':x.c<x.l?'--red':'--dim';
+const hd=document.createElement('div'),pr=document.createElement('span'),sp=document.createElement('b');hd.style.cssText='display:flex;justify-content:space-between;align-items:baseline;cursor:pointer;margin-bottom:6px';pr.style.cssText='font-size:26px;font-weight:700;color:var(--gold)';pr.textContent=fm(x.c);sp.style.cssText='font-size:14px;color:var('+sc+')';sp.textContent=sg;hd.append(pr,sp);hd.onclick=()=>{cur='XAUUSD';tabs();fill();upd();try{$('g').scrollIntoView({behavior:'smooth',block:'start'})}catch(e){}};el.appendChild(hd);
+const add=(a,b,k)=>{const d=document.createElement('div'),s1=document.createElement('span'),s2=document.createElement('b');d.className='zr';s1.textContent=a;s2.textContent=b;if(k)s2.className=k;d.append(s1,s2);el.appendChild(d)};
+add('Buy above (100-day high)',fm(x.h),x.c>x.h?'u':'');add('Sell below (100-day low)',fm(x.l),x.c<x.l?'d':'');
+if(x.xl!=null&&!isNaN(x.xl))add('Exit a buy if close below',fm(x.xl));if(x.xh!=null&&!isNaN(x.xh))add('Exit a sell if close above',fm(x.xh));
+if(sg==='NO SIGNAL')add('Nearest trigger',((x.h-x.c)/x.c<=(x.c-x.l)/x.c?((x.h-x.c)/x.c*100).toFixed(1)+'% up to buy':((x.c-x.l)/x.c*100).toFixed(1)+'% down to sell'));
+add('Position in 100-day range',((x.c-x.l)/(x.h-x.l)*100).toFixed(0)+'%');
+if(x.r!=null&&!isNaN(x.r))add('RSI (info only)',x.r.toFixed(1),x.r>=70?'d':x.r<=30?'u':'');
+if(x.at&&x.c>0)add('ATR (daily range)',fm(x.at)+' · '+(x.at/x.c*100).toFixed(2)+'% of price');
+if(x.d)add('Data date',x.d);
+const bt=BTR.XAUUSD;if(bt)add('Backtest, $1,000 start','$'+bt.e+' · '+bt.n+' trades · win '+bt.w+'%',bt.e>1000?'u':'d')}
+function sgl(){const el=$('sl');el.textContent='';const rows=[];PAIRS.forEach(p=>{const x=D[p];if(!x||[x.c,x.h,x.l].some(v=>v==null||isNaN(v))||x.h<=x.l)return;if(x.c>x.h)rows.push({p,s:'BUY',e:(x.c-x.h)/x.h*100,r:x.r});else if(x.c<x.l)rows.push({p,s:'SELL',e:(x.l-x.c)/x.l*100,r:x.r})});
+if(!rows.length){el.className='nt';el.textContent='No active signals right now.';return}
+el.className='';rows.forEach(o=>{const d=document.createElement('div'),a=document.createElement('span'),b=document.createElement('b');d.className='zr';d.style.cursor='pointer';a.textContent=o.p+(o.p===cur?' ◂':'');b.textContent=o.s+' · '+o.e.toFixed(1)+'% past the level'+(o.r!=null?' · RSI '+o.r.toFixed(0):'')+' ›';b.className=o.s==='BUY'?'u':'d';d.onclick=()=>{cur=o.p;tabs();fill();upd();try{$('g').scrollIntoView({behavior:'smooth',block:'start'})}catch(e){}};d.append(a,b);el.appendChild(d)})}
+function zones(){const x=D[cur],{c,h,l,xh,xl}=x,B=parseFloat($('bal').value),R=parseFloat($('rk').value)/100,S=stp(),el=$('zt');
+el.textContent='';
+if([c,h,l,xh,xl,B,R,S].some(v=>v==null||isNaN(v))||S<=0){el.className='nt';el.textContent='Enter the levels, balance, risk and stop to see the zones.';return}
+el.className='';
+const row=(a,b,k)=>{const d=document.createElement('div'),s1=document.createElement('span'),s2=document.createElement('b');d.className='zr';s1.textContent=a;s2.textContent=b;if(k)s2.className=k;d.append(s1,s2);el.appendChild(d)};
+row('Buy zone','above '+fm(h),c>h?'u':'');
+row('Buy stop',fm(h*(1-S)));
+row('Buy exit if close below',fm(xl));
+row('Sell zone','below '+fm(l),c<l?'d':'');
+row('Sell stop',fm(l*(1+S)));
+row('Sell exit if close above',fm(xh));
+row('Stop distance',(S*100).toFixed(2)+'% ('+(x.at&&parseFloat($('am').value)>0?'ATR x'+$('am').value:'fixed')+')');
+row('Position size','$'+(B*R/S).toFixed(0)+' (risks $'+(B*R).toFixed(2)+')');
+row('Now',c>h?'In buy zone':c<l?'In sell zone':'Waiting: '+((h-c)/c*100).toFixed(1)+'% to buy, '+((c-l)/c*100).toFixed(1)+'% to sell')}
+function tickets(){const x=D[cur],{h,l,xh,xl}=x,B=parseFloat($('bal').value),R=parseFloat($('rk').value)/100,S=stp(),el=$('tk');el.textContent='';
+if([h,l,xh,xl,B,R,S].some(v=>v==null||isNaN(v))||S<=0||h<=l){el.className='nt';el.textContent='Apply data and set balance, risk and stop to see the tickets.';return}
+el.className='';
+const px=(h+l)/2,nl=cur==='XAUUSD'?100*px:['USDJPY','USDCAD','USDCHF'].includes(cur)?100000:FX.includes(cur)?100000*px:null,lots=nl?B*R/S/nl:null,mn=nl?0.01*nl*S:null;
+const row=(a,b,k)=>{const d=document.createElement('div'),s1=document.createElement('span'),s2=document.createElement('b');d.className='zr';s1.textContent=a;s2.textContent=b;if(k)s2.className=k;d.append(s1,s2);el.appendChild(d)};
+row('Symbol',cur);
+row('Buy Stop price',fm(h));
+row('Buy Stop, stop loss',fm(h*(1-S)));
+row('Sell Stop price',fm(l));
+row('Sell Stop, stop loss',fm(l*(1+S)));
+row('Take profit','leave empty');
+row('Expiration','today only');
+row('Exit a buy if close below',fm(xl));
+row('Exit a sell if close above',fm(xh));
+row('Volume for your risk',nl?lots.toFixed(4)+' lots':'check your broker');
+if(nl)row('MT5 minimum 0.01 lot risks','$'+mn.toFixed(0)+' ('+(mn/B*100).toFixed(1)+'% of balance)',mn>B*R*1.5?'d':'')}
+$('ap').onclick=()=>{let n=0;
+$('pz').value.split('\n').forEach(L=>{const t=L.trim().split('|');if(t[0]==='SCAN'&&t.length>=5){const nm=TK[t[1]]||t[1],a=parseFloat(t[2]),b=parseFloat(t[3]);if(!isNaN(a)&&!isNaN(b)){SC[nm]={a:a,b:b,n:parseInt(t[4])};n++}return}if(t[0]==='HST'&&t.length>=3){HS[t[1]]=t[2].split(',').map(Number);n++;return}if(t[0]==='CND'&&t.length>=3){CN[t[1]]=t[2].split(';').map(s=>s.split(',').map(Number));n++;return}if(t[0]==='BT'&&t.length>=6){BTR[t[1]]={n:+t[2],w:+t[3],d:+t[4],e:+t[5]};n++;return}if(t.length<8||!t[0].trim())return;if(!D[t[0]]){D[t[0]]={};PAIRS.push(t[0])}
+const v=t.slice(2,8).map(parseFloat);if(v.some(isNaN))return;
+D[t[0]]={d:t[1],c:v[0],h:v[1],l:v[2],xh:v[3],xl:v[4],r:v[5],at:parseFloat(t[8])||null};n++});
+$('pm').textContent=n?'Updated '+n+' line(s). Tap a market to see its signal.':'No valid lines found. Paste the lines the Colab cell printed.';
+if(n){try{localStorage.setItem('fxraw',$('pz').value)}catch(e){}}sv();ssv();tabs();fill();upd();scan();btl()};
+$('ao').onclick=()=>{let s=null;try{s=localStorage.getItem('fxraw')}catch(e){}if(!s){$('pm').textContent='No saved data in this browser yet. Paste new Colab output once and tap Apply data.';return}$('pz').value=s;$('ap').click()};
+
+function ssv(){try{localStorage.setItem('fxsc',JSON.stringify(SC));localStorage.setItem('fxbt',JSON.stringify(BTR));localStorage.setItem('fxcn',JSON.stringify(CN));localStorage.setItem('fxhs',JSON.stringify(HS))}catch(e){}}
+function scan(){const el=$('sc');el.textContent='';const ks=Object.keys(SC);
+if(!ks.length){el.className='nt';el.textContent='No scan yet. Run the scan cell in Colab and paste its lines above.';return}
+el.className='';let ok=0;
+ks.forEach(k=>{const v=SC[k],up=v.a>1000&&v.b>1000,dn=v.a<=1000&&v.b<=1000;if(up)ok++;
+const d=document.createElement('div'),s1=document.createElement('span'),s2=document.createElement('b');d.className='zr';
+s1.textContent=k+' ('+v.n+' trades)';s2.textContent='$'+v.a+' / $'+v.b;s2.className=up?'u':dn?'d':'';d.append(s1,s2);el.appendChild(d)});
+const s=document.createElement('div');s.className='nt';s.textContent=ok+' of '+ks.length+' markets ended above $1,000 in both halves.';el.appendChild(s)}
+let LOG=[];try{LOG=JSON.parse(localStorage.getItem('fxlog')||'[]')}catch(e){}
+const sl=()=>{try{localStorage.setItem('fxlog',JSON.stringify(LOG))}catch(e){}};
+function rl(){const el=$('lg');el.textContent='';risk();if(!LOG.length){el.className='nt';el.textContent='No paper trades yet. The Log button works when a signal triggers.';return}
+el.className='';const dn=LOG.filter(x=>x.x!=null);let eq=0,pk=0,dd=0,w=0;dn.forEach(x=>{eq+=x.R;pk=Math.max(pk,eq);dd=Math.max(dd,pk-eq);if(x.R>0)w++});
+const sm=document.createElement('div');sm.className='nt';sm.style.marginBottom='6px';sm.textContent=dn.length?dn.length+' closed · win rate '+(w/dn.length*100).toFixed(0)+'% · total '+eq.toFixed(2)+'R · max drawdown '+dd.toFixed(2)+'R':'No closed trades yet. Enter an exit price on an open trade to see win rate, R and drawdown.';el.appendChild(sm);
+LOG.map((x,i)=>[x,i]).slice(-15).reverse().forEach(([x,i])=>{const r=document.createElement('div');r.className='lr';r.textContent=x.d+'  '+x.p+'  '+x.s+' @ '+x.c+(x.x!=null?'  →  '+x.x+'  ('+(x.R>0?'+':'')+x.R+'R)':'  (open) ');
+if(x.x==null){const inp=document.createElement('input'),b=document.createElement('button');inp.type='number';inp.step='any';inp.placeholder='exit';inp.setAttribute('aria-label','Exit price');inp.style.cssText='width:80px;padding:3px';b.textContent='Close';b.style.padding='3px 8px';
+b.onclick=()=>{const v=parseFloat(inp.value);if(isNaN(v))return;const e=LOG[i];e.x=v;e.R=+(((e.s==='BUY'?1:-1)*(v-e.c)/e.c)/(e.sp||.03)).toFixed(2);sl();rl()};r.append(inp,b)}
+el.appendChild(r)})}
+$('lb').onclick=()=>{if(!SIG)return;if(ddv()>=parseFloat($('md').value))return;const x=D[cur];LOG.push({d:x.d,p:cur,s:SIG,c:x.c,sp:stp()||.03,r:parseFloat($('rk').value)||1});sl();rl()};
+$('lc').onclick=()=>{LOG=[];sl();rl()};
+
+function bars(id,rows,base,mn,mx,f){const pc=v=>(v-mn)/(mx-mn)*100,b=pc(base);
+$(id).innerHTML=rows.map(([n,v])=>{const p=pc(v),cl=v>=base?'u':'d';return `<div class="r"><span>${n}</span><div class="t"><i class="ax" style="left:${b}%"></i><i class="b ${cl}" style="left:${Math.min(p,b)}%;width:${Math.abs(p-b)}%"></i></div><b class="${cl}">${f(v)}</b></div>`}).join('')}
+bars('bt',[['EURUSD MA+trend 1h',923.88],['EURUSD RSI 1h',979.66],['EURUSD RSI 1d',1011.12],['GBPUSD RSI 1d',1160.84],['AUDUSD RSI 1d',1114.54],['Gold RSI 1d',973.53],['Gold breakout 1d',1019.43],['Gold breakout, unseen',1069.31]],1000,900,1220,v=>'$'+v.toFixed(0));
+$('pz').addEventListener('input',()=>{clearTimeout(window._t);window._t=setTimeout(()=>$('ap').click(),400)});
+$('cc').onclick=async()=>{const a=$('cs');try{await navigator.clipboard.writeText(a.value);$('cc').textContent='Copied'}catch(e){a.select();$('cc').textContent='Select and copy'}setTimeout(()=>$('cc').textContent='Copy script',2000)};
+$('pb').onclick=async()=>{try{$('pz').value=await navigator.clipboard.readText();$('ap').click()}catch(e){$('pm').textContent='Clipboard is blocked here. Long-press the box and paste instead.'}};
+tabs();fill();upd();rl();scan();btl();
+fetch('data.txt?'+Date.now()).then(r=>r.ok?r.text():Promise.reject()).then(x=>{if(x&&x.indexOf('|')>0){$('pz').value=x;$('ap').click()}}).catch(()=>{});
+</script></body></html>
